@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "C:/vulkan tutorial/include",
-                "C:/vulkan tutorial/include/**"
+                "C:/vulkan tutorial/include/**",
+                "${workspaceFolder}/include",
+                "${env:VULKAN_SDK}/Include"
             ],
             "defines": [
                 "_DEBUG",

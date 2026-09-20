@@ -14,7 +14,9 @@ add_executable(the_engine
     src/main.cpp
     src/window.cpp
     src/first_app.cpp
-    include/pipeline.h
+    src/pipeline.cpp
+    src/engine_device.cpp
+    src/swap_chain.cpp
 )
 
 target_include_directories(the_engine PRIVATE
@@ -32,16 +34,26 @@ if(MSVC)
     )
 endif()
 
+
+# ---------------------------------------------------------
+# GLSL -> SPIR-V
+# ---------------------------------------------------------
+
 find_program(GLSLC
     NAMES glslc
     PATHS "$ENV{VULKAN_SDK}/Bin"
     REQUIRED
 )
 
-set(SHADER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shader")
-set(SHADER_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader")
+set(SHADER_SOURCE_DIR
+    "${CMAKE_CURRENT_SOURCE_DIR}/shader"
+)
 
-file(MAKE_DIRECTORY "${SHADER_BINARY_DIR}")
+# Put compiled shaders next to the executable:
+# build/Debug/shader/
+set(SHADER_BINARY_DIR
+    "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/shader"
+)
 
 file(GLOB SHADERS
     "${SHADER_SOURCE_DIR}/*.vert"
@@ -52,25 +64,39 @@ set(SPIRV_FILES)
 
 foreach(SHADER ${SHADERS})
 
-    get_filename_component(SHADER_NAME "${SHADER}" NAME)
-    set(SPIRV "${SHADER_BINARY_DIR}/${SHADER_NAME}.spv")
+    get_filename_component(SHADER_NAME
+        "${SHADER}"
+        NAME
+    )
+
+    set(SPIRV
+        "${SHADER_BINARY_DIR}/${SHADER_NAME}.spv"
+    )
 
     message(STATUS "GLSL: ${SHADER}")
     message(STATUS "SPIR-V: ${SPIRV}")
 
     add_custom_command(
         OUTPUT "${SPIRV}"
+
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${SHADER_BINARY_DIR}"
+
         COMMAND "${GLSLC}"
-                "${SHADER}"
-                -o "${SPIRV}"
+            "${SHADER}"
+            -o "${SPIRV}"
+
         DEPENDS "${SHADER}"
+
         COMMENT "Compiling GLSL: ${SHADER_NAME}"
+
         VERBATIM
     )
 
     list(APPEND SPIRV_FILES "${SPIRV}")
 
 endforeach()
+
 
 add_custom_target(shaders ALL
     DEPENDS ${SPIRV_FILES}

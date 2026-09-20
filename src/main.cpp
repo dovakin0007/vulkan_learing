@@ -6,11 +6,14 @@
 
 int main()
 {
-    the_engine::FirstApp app{};
 
-    try {
+    try
+    {
+        the_engine::FirstApp app{};
         app.run();
-    }catch(const std::exception &e) {
+    }
+    catch (const std::exception &e)
+    {
         std::cerr << e.what() << "\n";
         return EXIT_FAILURE;
     }
